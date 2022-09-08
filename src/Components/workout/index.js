@@ -1,5 +1,5 @@
 import WorkoutList from "../workoutList";
-import "../../style/workout.css";
+import "./style.css";
 
 export default function Workout() {
   return (

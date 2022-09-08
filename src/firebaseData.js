@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, child, get } from "firebase/database";
+import { getDatabase, ref, child, get, onValue, off } from "firebase/database";
 import { useEffect, useState } from "react";
 
 const firebaseConfig = {
@@ -14,21 +14,28 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig); // ??????
 const dbRef = ref(getDatabase());
-const getDataPromise = get(child(dbRef, `/`));
+const getDataPromise = onValue(child(dbRef, `/`));
 
 function useFirebaseData() {
   const [data, setData] = useState();
   const getData = async () => {
-    const snapshot = await getDataPromise;
-    if (snapshot.exists()) {
-      setData(snapshot.val());
-    } else {
-      console.log("No data available");
-    }
+  const snapshot = await getDataPromise;
   };
 
   useEffect(() => {
-    getData();
+    try {
+      const dbRead = onValue( dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setData(snapshot.val());
+      } else {
+        console.log("No data available");
+      }
+    }, ()=>{});
+    return ()=>dbRead()
+    } catch(error) {
+
+    }
+    
   }, []);
 
   return data;

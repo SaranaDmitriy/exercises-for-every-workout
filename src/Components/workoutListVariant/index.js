@@ -1,18 +1,34 @@
 import { useState } from "react";
-import "../../style/workoutListVariant.css";
+import "./style.css";
 import WorkoutListVarItem from "../workoutListVarItem";
+import addIcon from "../../icon/add.png";
+import { getDatabase, ref, update } from "firebase/database";
 
 export default function WorkoutListVariant(props) {
   const [variant, setVariants] = useState(0);
-  /*--------------------------*/
-  // let currentdate = new Date();
-  // let oneJan = new Date(currentdate.getFullYear(), 0, 1);
-  // let numberOfDays = Math.floor((currentdate - oneJan) / (24 * 60 * 60 * 1000));
-  // let result = Math.ceil((currentdate.getDay() + 1 + numberOfDays) / 7);
-  // let myVariants = result % 2 === 0 ? 0 : 1;
-  // const workoutVariant = props.group.variants[myVariants];
-  /*--------------------------*/
-  const workoutVariant = props.group.variants[variant];
+  const workoutList = props.group.variants[variant];
+
+  /* ------------ Изменения --------------- */
+  const db = getDatabase();
+  const copy = [...workoutList]
+  /* ADD NEW EXERCISE */
+  const addExercise = () => {
+    copy.push('Новое упражнение')
+    const updates = {
+      [`${props.path}/variants/${variant}`]: copy
+    };
+    return update(ref(db), updates);
+  };
+
+  /* DELETE EXERCISE */
+  const deleteExercise = (index) => {  
+    copy.splice(index, 1)
+    const updates = {
+      [`${props.path}/variants/${variant}`]: copy
+    };
+    return update(ref(db), updates);
+  };
+
   return (
     <div className="exercise-group">
       <h2 className="text-group"> {props.group.title}</h2>
@@ -26,10 +42,29 @@ export default function WorkoutListVariant(props) {
         </select>
       </div>
       <ul className="list">
-        {workoutVariant.map((elem, index) => (
-          <WorkoutListVarItem key={index} elem={elem} index={index} />
+        {workoutList.map((elem, index) => (
+          <WorkoutListVarItem
+            key={elem}
+            elem={elem}
+            index={index}
+            path={`${props.path}/variants/${variant}`}
+            deleteExercise={()=> deleteExercise(index)}
+            />
         ))}
       </ul>
+      <div className="add-exercise" onClick={addExercise}>
+        <img src={addIcon} alt="add" />
+        <span>Добавить новое упражнение</span>
+      </div>
     </div>
   );
 }
+
+ /*-- РЕАЛИЗАЦИЯ БЕЗ ВЫБОРА ВАРИАНТА --*/
+  // let currentdate = new Date();
+  // let oneJan = new Date(currentdate.getFullYear(), 0, 1);
+  // let numberOfDays = Math.floor((currentdate - oneJan) / (24 * 60 * 60 * 1000));
+  // let result = Math.ceil((currentdate.getDay() + 1 + numberOfDays) / 7);
+  // let myVariants = result % 2 === 0 ? 0 : 1;
+  // const workoutVariant = props.group.variants[myVariants];
+  /*--------------------------*/
